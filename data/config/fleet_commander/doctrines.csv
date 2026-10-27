@@ -1,0 +1,4 @@
+id,file,enabled
+default,data/config/fleet_commander/doctrines/default.json,TRUE
+wolfpack,data/config/fleet_commander/doctrines/wolfpack.json,TRUE
+battle_line,data/config/fleet_commander/doctrines/battle_line.json,TRUE

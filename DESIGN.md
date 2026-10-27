@@ -92,13 +92,13 @@ From the research (docs/TACTICS_RESEARCH.md section 5). Details and fields in DO
 | `hunt_isolated` | **Wolfpack**: a pack at least 2x the weight of a lone enemy ship hunts it with Eliminate; leash, timeout and "rescuers arrived" abort; extra weight on an isolated player flagship | 0.1 |
 | `pounce` | Quick Eliminate on an enemy that just overloaded or started venting, then release | 0.1 |
 | `focus_fire` | Converge on the enemy line ship under the most flux pressure, matched to our damage types | 0.1 |
-| `escort` | Screens for carriers, officer ships and the flagship | 0.1 |
+| `escort` | Screens for carriers and the flagship (any condition on our ships) | 0.1 |
 | `objectives` | Capture near points, assault contested ones when stronger, release safe ones | 0.1 |
 | `fleet_stance` | Full Assault to mop up when clearly winning; Full Retreat when hopeless | 0.1 |
-| `battle_line` | A moving Defend point that keeps capitals and cruisers from chasing frigates | 0.2 |
+| `battle_line` | A moving Defend point that keeps capitals and cruisers from chasing frigates | 0.1 |
 | `flank` | Fast ships wrap around the enemy's flanks | 0.2 |
 | `harass` | Fast ships tie down enemy capitals | 0.2 |
-| `avoid` | Stay away from a juggernaut until the situation changes | 0.2 |
+| `avoid` | Stay away from a juggernaut until the situation changes | 0.1 |
 | `carrier_ops` | Carriers rally behind the line; fighter strikes on slow or exposed ships | 0.2 |
 | `regroup` | Fall back together when losing, then counterattack | 0.3 |
 
@@ -107,8 +107,8 @@ From the research (docs/TACTICS_RESEARCH.md section 5). Details and fields in DO
 | Doctrine | Picked for | Character |
 |---|---|---|
 | `default` (Balanced) | Anything that matches nothing else | Every 0.1 tactic, moderate settings |
-| `wolfpack` | Mostly fast frigates/destroyers; pirates, Luddic Path | Hunting has top priority; avoid big defended ships; no jousting |
-| `battle_line` | Slow, heavily armoured fleets | Hold the line, pressure the highest-flux target in front, skirmishers hunt |
+| `wolfpack` | 40%+ of weight on frigates, average speed 110+ | Hunting has top priority; avoid big defended ships; no focus fire |
+| `battle_line` | Average speed below 65, average armour 900+ | Hold the line, pressure the highest-flux target in front, skirmishers hunt |
 | `carrier_group` (0.2) | 30%+ of weight on carriers | Carriers rally back, escorts on every carrier, fighter strikes |
 | `phase_raiders` (0.2) | 30%+ phase ships | Phase ships hunt soft targets behind the line |
 | `anti_carrier`, `anti_phase` (0.2) | Selected by the *enemy's* composition | Counter-doctrines from TACTICS_RESEARCH.md 5.14 |
@@ -125,7 +125,8 @@ From the research (docs/TACTICS_RESEARCH.md section 5). Details and fields in DO
     "bonusCommandPoints": 0,      // extra CP for the enemy side
     "announceOrders": true,       // "Enemy commander: hunting the isolated ISS Hammer"
     "factionDoctrines": { },      // e.g. { "hegemony": "battle_line" }
-    "debugLog": false,            // log every decision pass (for tuning)
+    "orderMapping": { },          // e.g. { "eliminate": "ENGAGE" } if the order test shows another mapping
+    "debugLog": false,            // log every decision (for tuning)
     "logPlayerOrders": true       // log the assignment types the player gives (verifies the order mapping)
 }
 ```
@@ -133,8 +134,10 @@ From the research (docs/TACTICS_RESEARCH.md section 5). Details and fields in DO
 ## 7. Command points
 
 Vanilla's Threat and Dweller brains give themselves effectively unlimited CP and pass `useCommandPoint = false`.
-We offer both: `useCommandPoints: true` ("fair", default) charges the enemy fleet's own CP pool like the player's,
-after we check `getCommandPointsLeft()`; a `cpReserve` keeps points for urgent tactics (retreats, pounces).
+We offer both: `useCommandPoints: true` ("fair", default) charges the enemy fleet's own CP pool like the player's:
+the first order spends one CP and opens a command window (`commandWindow`, default 8 s) in which more orders are
+free, which is how the player's command channel works. We check `getCommandPointsLeft()` first; a `cpReserve`
+keeps points for urgent tactics (retreats, pounces). If the enemy fleet has no CP at all, the log says so.
 `false` ("hard") makes orders free. `bonusCommandPoints` adds CP via
 `getCommandPointsStat().modifyFlat("fc_bonus", n)`.
 
@@ -169,18 +172,22 @@ the pounce watcher (overload/vent flags only). No game objects in static fields.
 
 ## 10. Scope
 
-* **0.1 (MUST):** takeover/hand-back, doctrine loader (format v1, CSV index, `extends`, validation), facts,
-  conditions, scores, claims, orders, the seven 0.1 tactic types, doctrines `default`, `wolfpack`, `battle_line`,
-  settings, announcements, `logPlayerOrders`.
-* **0.2 (SHOULD):** the 0.2 tactic types; doctrines `carrier_group`, `phase_raiders`, counter-doctrines.
+* **0.1 (done, not yet tested in game):** takeover/hand-back, doctrine loader (format v1, CSV index, `extends`,
+  validation), facts, conditions, scores, claims, orders with command windows, nine tactic types
+  (`retreat_damaged`, `hunt_isolated`, `pounce`, `focus_fire`, `escort`, `objectives`, `fleet_stance`, `avoid`,
+  `battle_line`), doctrines `default`, `wolfpack`, `battle_line`, settings, announcements, `logPlayerOrders`,
+  offline validator and simulation harness.
+* **0.2 (SHOULD):** `flank`, `harass`, `carrier_ops`; doctrines `carrier_group`, `phase_raiders`,
+  counter-doctrines; tuning from playtests.
 * **0.3+ (STRETCH):** `regroup`, bait tactics, LunaLib in-game settings, faction flavour, commander skill
   scaling (officers with Coordinated Maneuvers think faster).
 
 ## 11. Testing
 
-No tool can play the game. Every build is checked statically (compiles against the real API; every shipped
-doctrine loads and validates; a test harness evaluates conditions and scores on made-up facts). Then the user runs
-the smoke test:
+No tool can play the game. Every build is checked offline: it compiles against the real API; `tools/ValidateConfig`
+loads and validates every shipped doctrine and self-tests conditions, scores and merging; `tools/run_harness.sh`
+runs the commander against faked game interfaces in scripted battles (hunt, pounce, retreat, escort, doctrine
+choice, zero CP). Then the user runs the in-game smoke test, [SMOKE_TEST.md](SMOKE_TEST.md):
 
 1. **Simulator, order mapping:** give your own ships Eliminate, Engage, Harass and Fighter Strike once each; send
    `starsector.log` (the `logPlayerOrders` lines settle the enum mapping).

@@ -1,0 +1,13 @@
+{
+    "enabled": true,
+    "enableInSimulator": true,
+    "enableInMissions": true,
+    "difficulty": 1.0,
+    "useCommandPoints": null,
+    "bonusCommandPoints": 0,
+    "announceOrders": true,
+    "factionDoctrines": {},
+    "orderMapping": {},
+    "debugLog": false,
+    "logPlayerOrders": true
+}

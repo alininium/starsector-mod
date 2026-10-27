@@ -1,0 +1,33 @@
+{
+    "id": "wolfpack",
+    "name": "Wolfpack",
+    "description": "Fast frigate and destroyer fleets: hunting isolated ships comes first, big defended ships are avoided, no jousting.",
+    "formatVersion": 1,
+    "extends": "default",
+    "select": {
+        "when": { "all": [ { "fact": "own.share.frigate", ">=": 0.4 }, { "fact": "own.avgSpeed", ">=": 110 } ] },
+        "weight": 10
+    },
+    "tactics": [
+        {
+            "id": "hunt_loners",
+            "priority": 95,
+            "maxTasks": 2,
+            "phases": ["opening", "main", "winning"],
+            "targets": { "require": { "all": [ { "fact": "isolation", ">=": 0.5 }, { "fact": "phased", "==": 0 } ] } },
+            "ships": { "roles": ["hunter", "skirmisher", "phase", "line"] }
+        },
+        {
+            "id": "dont_joust",
+            "type": "avoid",
+            "priority": 85,
+            "maxTasks": 2,
+            "targets": {
+                "require": { "all": [ { "fact": "size.capital", "==": 1 }, { "fact": "support", ">=": 4 } ] },
+                "score": { "value": 1, "support": 0.1 }
+            },
+            "release": { "any": [ { "phase": ["winning"] }, { "fact": "support", "<": 2 } ] }
+        },
+        { "id": "focus", "enabled": false }
+    ]
+}

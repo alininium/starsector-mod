@@ -1,0 +1,32 @@
+{
+    "id": "battle_line",
+    "name": "Battle line",
+    "description": "Slow, heavily armoured fleets: hold the line together, crush the highest-flux target in front, let the skirmishers hunt.",
+    "formatVersion": 1,
+    "extends": "default",
+    "select": {
+        "when": { "all": [ { "fact": "own.avgSpeed", "<": 65 }, { "fact": "own.avgArmor", ">=": 900 } ] },
+        "weight": 10
+    },
+    "tactics": [
+        {
+            "id": "hold_line",
+            "type": "battle_line",
+            "priority": 70,
+            "cpPriority": "low",
+            "offset": 600,
+            "moveThreshold": 1200,
+            "ships": { "roles": ["anchor", "line"], "min": 2 }
+        },
+        {
+            "id": "focus",
+            "priority": 75,
+            "targets": { "score": { "value": 1, "flux": 3, "hardFlux": 2, "shieldDown": 2, "hullMissing": 1,
+                                    "damageMatch": 1, "nearestDistance": -4 } }
+        },
+        {
+            "id": "hunt_loners",
+            "ships": { "roles": ["skirmisher", "hunter"] }
+        }
+    ]
+}

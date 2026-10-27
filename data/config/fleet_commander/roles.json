@@ -1,0 +1,15 @@
+{
+    "roles": [
+        { "id": "civilian",   "require": { "fact": "civilian", "==": 1 } },
+        { "id": "carrier",    "require": { "all": [ { "fact": "carrier", "==": 1 },
+                                                    { "not": { "fact": "size.capital", "==": 1 } } ] } },
+        { "id": "phase",      "require": { "fact": "phase", "==": 1 } },
+        { "id": "anchor",     "require": { "any": [ { "fact": "size.capital", "==": 1 },
+                                                    { "fact": "flagship", "==": 1 } ] } },
+        { "id": "line",       "require": { "fact": "size.cruiser", "==": 1 } },
+        { "id": "hunter",     "require": { "all": [ { "fact": "size.destroyer", "==": 1 },
+                                                    { "fact": "speed", ">=": 100 } ] } },
+        { "id": "line",       "require": { "fact": "size.destroyer", "==": 1 } },
+        { "id": "skirmisher", "require": true }
+    ]
+}
