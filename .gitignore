@@ -1,0 +1,12 @@
+build/
+dist/
+__pycache__/
+*.pyc
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+# Game files are proprietary: never commit them
+lib/
+starfarer.api*
